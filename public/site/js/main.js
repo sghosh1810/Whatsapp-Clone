@@ -2,10 +2,16 @@ var BASE_URL = (window.location.hostname === "localhost" || window.location.host
 
 $(function() {
     $(".preload").fadeOut(2000, function() {
-        $(".main-content").fadeIn(1000);        
+        $(".main-content").fadeIn(1000);
+        if (isDashboard())  { 
+            setTimeout(() => {changeMessageTime()},1000);
+            setInterval(() => {get_unread_message_ajax()},10000);
+        }
     });
 });
-
+$(document).ready(() => {
+    emoji_modal_builder();
+})
 $('#contact-search').on('keypress',(e) => { 
     e.which==13?searchChatContacts():'';
 });
@@ -87,19 +93,17 @@ $("#profile-picture-edit-form").submit(function(evt){
     return false;
 });
 
-$('body').one('click','.chat-user-profile',function(event) {
-    $(this).click();
-    $('.user-chat.w-100').css('display','block');
-})
-
 $('body').on('click','.chat-user-profile',function(event) {
     if (!($(this).closest('li').hasClass('active'))) {
-        var chat_user_id = $(this).attr('id').split('-').slice(-1)[0];
-        var chat_user_img = $(this).find('.chat-user-img').children('img').attr('src');
-        var chat_user_name = $(this).find('.chat-user-friend-name').text();
+        var _this = $(this);
+        $('.user-chat.w-100').css('display','none');
+        $('.preload-chat').css('display','flex');
+        var chat_user_id = _this.attr('id').split('-').slice(-1)[0];
+        var chat_user_img = _this.find('.chat-user-img').children('img').attr('src');
+        var chat_user_name = _this.find('.chat-user-friend-name').text();
         $('#chat-history-list li').removeClass('active');
         $('.user-chat-header').empty();
-        $(this).closest('li').addClass('active');
+        _this.closest('li').addClass('active');
         $.ajax({
             type: 'GET',
             url: BASE_URL+'api/getmessage',
@@ -109,10 +113,19 @@ $('body').on('click','.chat-user-profile',function(event) {
                 res = JSON.parse(res);
                 $('.list-unstyled.mb-0').empty();
                 chat_section_wrapper_builder({name:chat_user_name,profileImage:chat_user_img});
-                setTimeout(() => {}, 25);
                 chat_section_builder(res.data.message,{profileImage:chat_user_img,name:chat_user_name},$('#profile-id').text())
+                $('.preload-chat').css('display','none');
+                $('.user-chat.w-100').fadeIn(500);
                 var container = document.getElementsByClassName('chat-conversation')[0].getElementsByClassName('simplebar-content-wrapper')[0];
                 container.scrollTo({ top: Number.MAX_SAFE_INTEGER, behavior: "smooth" });
+                $(_this).attr('data-last-message',(res.data.message[res.data.message.length-1])._id);
+                $(_this).find('.unread-message .badge').text('');
+                $.ajax({
+                    type: 'POST',
+                    url: BASE_URL+'api/updateLastSeenMessage',
+                    data: {id:chat_user_id},
+                    dataType: 'text'
+                });
             },
             error: function (jqXHR, exception) {
                 $('#chat-user-message-send-field').val('');
@@ -139,11 +152,17 @@ $('.chat-send').on('click',function (e) {
             $(clone).find('.chat-user-last-message-time').text('now');
             $('.chat-user-profile.active').remove();
             $(clone).hide().prependTo("#chat-history-list").slideDown(500);
-
         },
         error: function (jqXHR, exception) {
             $('#chat-user-message-send-field').val('');
             toast_message_builder('danger','white',{header:'',time:'',data:JSON.parse(jqXHR.responseText).message});
         }
     });
+})
+$('#emoji-modal-btn').on('click',() => {
+    $('#emoji-modal').modal('show');
+})
+//Mobile fix
+$('.user-chat-header').on('click', '#chat-back-btn' ,() => {
+    $('.user-chat.w-100').removeClass('user-chat-show')
 })

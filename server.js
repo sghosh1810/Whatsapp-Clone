@@ -8,7 +8,7 @@ const flash = require('connect-flash');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
-
+const {forwardAuthenticated, ensureAuthenticated} = require('./config/auth');
 //Dev dependency
 require('dotenv').config();
 
@@ -23,7 +23,7 @@ require('./config/passport')(passport);
 mongoose
   .connect(
     process.env.DATABASE_URI,
-    { useNewUrlParser: true ,useUnifiedTopology: true, useFindAndModify: true }
+    { useNewUrlParser: true ,useUnifiedTopology: true, useFindAndModify: false }
   )
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
@@ -76,10 +76,10 @@ app.use('/',indexRouter);
 app.use('/users', userRouter);
 app.use('/dashboard',dashboardRouter);
 app.use('/api',apiRouter);
-//404 redirects
-app.use((req, res, next) => {
-    res.status(404).sendFile('public/404/404.html', {root: path.join(__dirname)});
-});
+
+//Global redirects
+app.use(forwardAuthenticated);
+app.use(ensureAuthenticated);
 
 
 //Ports for usage

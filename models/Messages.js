@@ -8,6 +8,18 @@ MessagesSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    total_message_count: {
+        type: Number,
+        default: 1
+    },
+    first_user_last_seen_message: {
+        type: Number,
+        default: 0
+    },
+    second_user_last_seen_message: {
+        type: Number,
+        default: 0
+    },
     message: [{
         sender_id: {
             type: String,

@@ -1,0 +1,26 @@
+.main-content {
+	display: none;
+}
+
+.preload {
+	width: 100px;
+	height: 100px;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%)
+}
+
+.preload-chat {
+	display: none;
+	justify-content: center;
+	align-items: center;
+	margin: auto;
+}
+
+.modal-body .emoji-menu-tabs {
+    width: 100%;
+    margin-bottom: 8px;
+    margin-top: 3px;
+    text-align: center;
+}

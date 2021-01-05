@@ -7,8 +7,7 @@ const Status = require('../models/Status');
 router.get('/',ensureAuthenticated,async (req,res) => {
     const status = (await Status.findOne({id:req.user._id})).status;
     const chat_friends = await getChatsContacts(req.user._id,'');
-    chat_friends.sort((a,b) => {return a.lastMessageSort - b.lastMessageSort});
-    chat_friends.reverse();
+    chat_friends.sort((a,b) => {return b.lastMessageSort - a.lastMessageSort});
     req.user.status = status;
     res.render('dashboard',{
         user:req.user,

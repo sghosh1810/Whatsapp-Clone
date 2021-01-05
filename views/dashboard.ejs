@@ -5,6 +5,26 @@
     <div id="toast-notification" class="position-absolute w-100 d-flex flex-column p-4">
         <%- include ("partials/dashboard_toast") %>
     </div>
+    <!-- Modal -->
+    <div class="modal fade" id="emoji-modal" tabindex="-1" aria-labelledby="emoji-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="emoji-modal-label">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="layout-wrapper d-lg-flex">
         <!-- Start left sidebar-menu -->
         <div class="side-menu flex-lg-column mr-lg-1">
@@ -69,11 +89,7 @@
 
             <div class="flex-lg-column d-none d-lg-block">
                 <ul class="nav side-menu-nav justify-content-center">
-                    <li class="nav-item">
-                        <a class="nav-link" id="light-dark" href="#" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="Dark / Light Mode">
-                            <i class="ri-sun-line theme-mode-icon"></i>
-                        </a>
-                    </li>
+                    
 
                     <li class="nav-item btn-group dropup profile-user-dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -457,6 +473,9 @@
                                                             <p class="chat-user-message text-truncate mb-0"><%= chat_friend.status %></p>
                                                         </div>
                                                         <div class="font-size-11 chat-user-last-message-time"><%= chat_friend.lastMessage %></div>
+                                                            <div class="unread-message">
+                                                                <span class="badge badge-soft-danger badge-pill"><%= (chat_friend.unreadMessageCount>0) ? chat_friend.unreadMessageCount : '' %></span>
+                                                            </div>
                                                     </div>
                                                 </a>
                                             </li>
@@ -1848,7 +1867,9 @@
 
         </div>
         <!-- end chat-leftsidebar -->
-
+        <div class="preload-chat">
+            <img src="theme/assets/images/loader.gif">
+        </div>
         <!-- Start User chat -->
         <div class="user-chat w-100" style="display: none;">
             <div class="d-lg-flex">
@@ -1860,7 +1881,7 @@
                             <div class="col-sm-4 col-8">
                                 <div class="media align-items-center">
                                     <div class="d-block d-lg-none mr-2">
-                                        <a href="javascript: void(0);" class="user-chat-remove text-muted font-size-16 p-2"><i class="ri-arrow-left-s-line"></i></a>
+                                        <button type="button" class="btn text-muted font-size-16 p-2" id="chat-back-btn"><i class="ri-arrow-left-s-line"></i></button>
                                     </div>
                                     <div class="mr-3">
                                         <img src="theme/assets/images/users/avatar-4.jpg" class="rounded-circle avatar-xs" alt="">
@@ -2264,14 +2285,14 @@
                         <div class="row no-gutters">
                             <div class="col">
                                 <div>
-                                    <input type="text" class="form-control form-control-lg bg-light border-light" id="chat-user-message-send-field" placeholder="Enter Message...">
+                                    <input type="text" class="form-control form-control-lg bg-light border-light" id="chat-user-message-send-field"  placeholder="Enter Message...">
                                 </div>
                             </div>
                             <div class="col-auto">
                                 <div class="chat-input-links ml-md-2">
-                                    <ul class="list-inline mb-0">
+                                    <ul class="list-inline mb-0"></ul>
                                         <li class="list-inline-item">
-                                            <button type="button" class="btn btn-link text-decoration-none font-size-16 btn-lg waves-effect" data-toggle="tooltip" data-placement="top" title="Emoji">
+                                            <button type="button" class="btn btn-link text-decoration-none font-size-16 btn-lg waves-effect" data-toggle="tooltip" data-placement="top" title="Emoji" id="emoji-modal-btn">
                                                 <i class="ri-emotion-happy-line"></i>
                                             </button>
                                         </li>

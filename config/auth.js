@@ -16,6 +16,6 @@ module.exports = {
       if (req.isAuthenticated()) {
         return next();
       }
-      res.status('401').send({message:'Anauthorised Request!'});
+      res.status('401').send({message:'Unauthorised Request!'});
     }
 };

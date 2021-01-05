@@ -1,12 +1,14 @@
 const express = require('express');
+const extend  =  require('extend');
+
 const Friends = require('../../../models/Friends');
 const Messages = require('../../../models/Messages');
 const Status = require('../../../models/Status');
 const User = require('../../../models/User');
-const  {getFullProfile,addFriend,isValidRequest,addMessage,getMessage,getChatsContacts} = require('../v1/api_util');
-const { ensureAuthenticatedApi } = require('../../../config/auth');
+const  {getFullProfile,addFriend,isValidRequest,addMessage,getMessage,getChatsContacts,messageQueyExcute} = require('../v1/api_util');
+const { ensureAuthenticatedApi, ensureAuthenticated } = require('../../../config/auth');
 const { profile_image_upload } = require('../../../config/multer');
-const { compare } = require('bcryptjs');
+const { route } = require('../../dashboard');
 
 const router = express.Router();
 
@@ -77,6 +79,7 @@ router.get('/getMessage', ensureAuthenticatedApi, async(req,res) => {
         const message_history = await getMessage(req.user._id,req.query.id);
         res.send({data:message_history});
     } catch (error) {
+        console.log(error);
         res.status(500);
         res.send({message:'Something went wrong!'});
     }
@@ -86,7 +89,7 @@ router.post('/postMessage', ensureAuthenticatedApi, async (req,res) => {
         const message = await addMessage(req.user._id,req.body.id,{message:req.body.message.message,media:req.body.message.media},req.user._id);
         res.send({message:'Message sent successfully!'});
     } catch(err) {
-        //console.log(err.message);
+        console.log(err.message);
         res.status(500);
         res.send({message:'Something went wrong!'});
     }
@@ -115,5 +118,68 @@ router.post('/profile/uploadProfileImage',ensureAuthenticatedApi ,async(req,res)
             res.send({file:req.file.filename,message:'Profile Picture saved successfully!'});
         }
     });
-}) 
+})
+
+router.post('/updateLastSeenMessage', ensureAuthenticatedApi,async(req,res) => {
+    try {
+        const first_user = req.user._id;
+        const second_user = req.body.id;
+        let last_seen_messages = await messageQueyExcute(first_user,second_user);
+        if (last_seen_messages) {
+            last_seen_messages = last_seen_messages.toObject({getters:true});
+            if (last_seen_messages.first_user==first_user) {
+                last_seen_messages.first_user_last_seen_message = last_seen_messages.total_message_count;
+                await Messages.findByIdAndUpdate({_id:last_seen_messages._id},last_seen_messages);
+            } else {
+                last_seen_messages.second_user_last_seen_message = last_seen_messages.total_message_count;
+                await Messages.findByIdAndUpdate({_id:last_seen_messages._id},last_seen_messages);
+            }
+        }
+        res.send({message:'Update Success'});
+    } catch (err) {
+        console.log(err);
+        res.status('500').send({message:'Something went wrong!'});
+    }
+})
+
+router.get('/getUnreadMessageCount', ensureAuthenticatedApi ,async(req,res) => {
+    try {
+        const message_history = await getChatsContacts(req.user._id,'');
+        const unread_message_sender_id_and_count  = [];
+        if(!message_history) {
+            res.send({data:message_history});
+        }
+        message_history.forEach(users => {
+            if(users.unreadMessageCount>0) {
+                unread_message_sender_id_and_count.push({sender_id:users.id,unreadMessageCount:users.unreadMessageCount});
+            } 
+        });
+        res.send({data:unread_message_sender_id_and_count});
+    } catch (error) {
+        console.log(error);
+        res.status(500);
+        res.send({message:'Something went wrong!'});
+    }
+})
+
+router.get('/getUnreadMessage', ensureAuthenticatedApi,async(req,res) => {
+    try {
+        let unread_message = [];
+        let unread_message_obj = await getMessage(req.user._id,req.query.id);
+        unread_message_obj = unread_message_obj.toObject({getters:true});
+        if (req.user._id == unread_message_obj.first_user) {
+            unread_message = unread_message_obj.message.slice(unread_message_obj.first_user_last_seen_message,unread_message_obj.message.length);
+            unread_message_obj.first_user_last_seen_message = unread_message_obj.total_message_count;
+        } else {
+            unread_message = unread_message_obj.message.slice(unread_message_obj.second_user_last_seen_message,unread_message_obj.message.length);
+            unread_message_obj.second_user_last_seen_message = unread_message_obj.total_message_count;
+        }
+        await Messages.findByIdAndUpdate(unread_message_obj._id,unread_message_obj);
+        res.send({data:unread_message});
+    } catch(error) {
+        console.log(error);
+        res.status(500);
+        res.send({message:'Something went wrong!'});
+    }
+})
 module.exports=router;
