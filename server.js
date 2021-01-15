@@ -1,6 +1,8 @@
 //Importing all libs
 const path = require('path');
 const express = require('express');
+const http = require('http');
+const socketio =  require('socket.io');
 const expressLayouts = require('express-ejs-layouts');
 const bodyParser = require('body-parser')
 const passport = require('passport');
@@ -12,9 +14,12 @@ const {forwardAuthenticated, ensureAuthenticated} = require('./config/auth');
 //Dev dependency
 require('dotenv').config();
 
-
 //Start Express
 const app = express();
+
+//Socketio server init
+const server = http.createServer(app);
+const io = socketio(server);
 
 //Passport config
 require('./config/passport')(passport);
@@ -80,6 +85,11 @@ app.use('/api',apiRouter);
 //Global redirects
 app.use(forwardAuthenticated);
 app.use(ensureAuthenticated);
+
+
+io.on('connection',socket => {
+  console.log('New WS connection');
+})
 
 
 //Ports for usage
